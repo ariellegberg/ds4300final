@@ -1,0 +1,3 @@
+# Ignore specific files
+pages/sentiment_tweets.csv
+tweets.csv
