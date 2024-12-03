@@ -1,0 +1,11 @@
+numpy==1.26.4
+pandas==2.2.2
+seaborn==0.13.2
+Pillow==10.3.0
+pydeck==0.9.1
+scikit_learn==1.5.0
+streamlit==1.37.0
+streamlit_extras==0.4.3
+streamlit_javascript==0.1.5
+sympy==1.12
+mysql-connector-python==8.0.33
