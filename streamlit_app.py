@@ -13,8 +13,8 @@ LOGGER = get_logger(__name__)
 if __name__ == "__main__":
     st.write("## Arielle and Ella's DS4300 Final Project")
 
-    tik_tok_username =st.text_input('Enter Your Tik Tok Username', key='tik_tok')
-    upload = st.button('Upload Video')
+    tik_tok_username =st.text_input('Enter Your Twitter Username', key='tik_tok')
+    upload = st.button('Upload Tweet')
     if upload:
         switch_page('upload_file')
     time.sleep(1)
