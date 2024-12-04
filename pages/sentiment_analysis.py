@@ -1,42 +1,79 @@
 import pandas as pd
+import boto3
+import sqlalchemy
 from vaderSentiment.vaderSentiment import SentimentIntensityAnalyzer
 
 
+# Define Sentiment Labeling Function
 def get_sentiment_label(text, analyzer):
     scores = analyzer.polarity_scores(text)
     compound = scores['compound']
     if compound >= 0.05:
-        return 'Positive'
+        return 'positive'
     elif compound <= -0.05:
-        return 'Negative'
+        return 'negative'
     else:
-        return 'Neutral'
+        return 'neutral'
 
 
-def vader_manual_labeling(input_csv='/Users/arielle/ds4300final/tweets.csv', output_csv='sentiment_tweets.csv',
-                          text_column='Text', required_columns=None, limit=None):
-    if required_columns is None:
-        required_columns = ['ID', 'User', 'Text', 'Sentiment']
+# AWS S3 and RDS Configuration
+AWS_REGION = "your-region"  # e.g., "us-east-1"
+S3_BUCKETS = {
+    "positive": "your-positive-bucket",
+    "neutral": "your-neutral-bucket",
+    "negative": "your-negative-bucket",
+    "nonprocessed": "your-nonprocessed-bucket",
+}
+RDS_CONFIG = {
+    "host": "your-rds-endpoint",
+    "port": 3306,
+    "user": "your-username",
+    "password": "your-password",
+    "database": "your-database",
+}
 
-    analyzer = SentimentIntensityAnalyzer()
-    df = pd.read_csv(input_csv, encoding='latin1')
-
-    # Validate the required columns
-    missing_columns = [col for col in required_columns if col != 'Sentiment' and col not in df.columns]
-    if missing_columns:
-        raise ValueError(f"The following required columns are missing in the input CSV: {missing_columns}")
-
-    # Apply sentiment analysis to the specified number of rows
-    if limit:
-        df = df.head(limit)
-
-    df['Sentiment'] = df[text_column].apply(lambda text: get_sentiment_label(text, analyzer))
-
-    # Filter only the required columns
-    output_df = df[required_columns]
-
-    output_df.to_csv(output_csv, index=False)
-    print(f"Sentiment analysis complete. Saved to {output_csv}.")
+# Initialize AWS Clients
+s3_client = boto3.client('s3', region_name=AWS_REGION)
+analyzer = SentimentIntensityAnalyzer()
 
 
-vader_manual_labeling()
+# Function to Upload to S3
+def upload_to_s3(bucket_name, file_key, content):
+    s3_client.put_object(Bucket=bucket_name, Key=file_key, Body=content)
+    print(f"Uploaded to {bucket_name}: {file_key}")
+
+
+# Main Function
+def process_tweets_to_s3_and_rds(csv_file):
+    # Read CSV
+    df = pd.read_csv(csv_file)
+
+    # Initialize Connection to RDS
+    engine = sqlalchemy.create_engine(
+        f"mysql+pymysql://{RDS_CONFIG['user']}:{RDS_CONFIG['password']}@"
+        f"{RDS_CONFIG['host']}:{RDS_CONFIG['port']}/{RDS_CONFIG['database']}"
+    )
+
+    # Process Each Tweet
+    for _, row in df.iterrows():
+        # Extract Text and Metadata
+        text = row['Text']
+        metadata = row.drop(['Text']).to_dict()
+
+        # Determine Sentiment
+        sentiment = get_sentiment_label(text, analyzer)
+        metadata['Sentiment'] = sentiment
+
+        # Upload Text to Appropriate S3 Bucket
+        file_key = f"{metadata['Id']}.txt" if 'Id' in metadata else f"{_}.txt"
+        upload_to_s3(S3_BUCKETS[sentiment], file_key, text)
+
+        # Upload Metadata to RDS
+        pd.DataFrame([metadata]).to_sql(
+            'tweets_metadata', engine, index=False, if_exists='append'
+        )
+
+
+# Call the Function
+if __name__ == "__main__":
+    process_tweets_to_s3_and_rds('tweets.csv')
