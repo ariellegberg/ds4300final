@@ -35,7 +35,11 @@ RDS_CONFIG = {
 }
 
 # Initialize AWS Clients
-s3_client = boto3.client('s3', region_name=AWS_REGION)
+session = boto3.session.Session()
+s3_client = session.client('s3',
+    region_name=AWS_REGION,
+    config=boto3.Config(signature_version='s3v4')
+)
 analyzer = SentimentIntensityAnalyzer()
 
 # Function to Upload to S3
