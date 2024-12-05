@@ -21,10 +21,10 @@ def get_sentiment_label(text, analyzer):
 # AWS S3 and RDS Configuration
 AWS_REGION = "us-east-1"
 S3_BUCKETS = {
-   "positive": "positive-bucket",
-   "neutral": "neutral-bucket",
-   "negative": "negative-bucket",
-   "nonprocessed": "nonprocessed-bucket",
+   "positive": "positive-tweets",
+   "neutral": "neutral-tweets",
+   "negative": "negative-tweets",
+   "nonprocessed": "tweet-uploads",
 }
 RDS_CONFIG = {
    "host": "twitterdatabase.clq2628wi96r.us-east-1.rds.amazonaws.com",
@@ -40,6 +40,7 @@ analyzer = SentimentIntensityAnalyzer()
 
 # Function to Upload to S3
 def upload_to_s3(bucket_name, file_key, content):
+	print('poop', bucket_name)
    try:
        s3_client.put_object(Bucket=bucket_name, Key=file_key, Body=content)
        print(f"Uploaded to {bucket_name}: {file_key}")
@@ -100,4 +101,4 @@ def process_tweets_to_s3_and_rds(csv_file, interval=10):
 
 # Call the Function
 if __name__ == "__main__":
-   process_tweets_to_s3_and_rds('home/ubuntu/tweets.csv')
+   process_tweets_to_s3_and_rds('/home/ubuntu/tweets.csv')
