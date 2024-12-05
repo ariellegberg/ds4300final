@@ -40,7 +40,7 @@ analyzer = SentimentIntensityAnalyzer()
 
 # Function to Upload to S3
 def upload_to_s3(bucket_name, file_key, content):
-	print('poop', bucket_name)
+   print('bucket', bucket_name)
    try:
        s3_client.put_object(Bucket=bucket_name, Key=file_key, Body=content)
        print(f"Uploaded to {bucket_name}: {file_key}")
