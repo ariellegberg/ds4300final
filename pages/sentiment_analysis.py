@@ -4,7 +4,8 @@ import sqlalchemy
 from vaderSentiment.vaderSentiment import SentimentIntensityAnalyzer
 import time
 from sqlalchemy.exc import SQLAlchemyError
-from sqlalchemy import create_engine, text
+from sqlalchemy import create_engine
+from sqlalchemy.sql import text as sqltext
 
 # Define Sentiment Labeling Function
 def get_sentiment_label(text, analyzer):
@@ -77,7 +78,7 @@ def process_tweets_to_s3_and_rds(csv_file, interval=10):
 
            try:
                with engine.connect() as connection:
-                   query = text(f"SELECT COUNT(*) FROM tweets_metadata WHERE ID = {row['ID']}")
+                   query = sqltext(f"SELECT COUNT(*) FROM tweets_metadata WHERE ID = {row['ID']}")
                    result = connection.execute(query)
                    count = result.fetchone()[0]
 
@@ -99,4 +100,4 @@ def process_tweets_to_s3_and_rds(csv_file, interval=10):
 
 # Call the Function
 if __name__ == "__main__":
-   process_tweets_to_s3_and_rds('tweets.csv')
+   process_tweets_to_s3_and_rds('home/ubuntu/tweets.csv')
