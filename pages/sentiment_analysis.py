@@ -35,9 +35,12 @@ RDS_CONFIG = {
 }
 
 # Initialize AWS Clients
-session = boto3.session.Session()
-s3_client = session.client('s3', region_name=AWS_REGION)
-
+s3_client = boto3.client('s3', region_name=AWS_REGION)
+try:
+    response = s3_client.list_buckets()
+    print("S3 Buckets:", response['Buckets'])
+except Exception as e:
+    print("Error accessing S3:", e)
 analyzer = SentimentIntensityAnalyzer()
 
 # Function to Upload to S3
