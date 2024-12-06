@@ -1,12 +1,79 @@
 import streamlit as st
-from streamlit.logger import get_logger
-from pathlib import Path
-import os
-LOGGER = get_logger(__name__)
+import boto3
+import pymysql
+import pandas as pd
+
+# AWS S3 Configuration
+S3_BUCKETS = {
+    'positive': 'positive-tweets',
+    'neutral': 'neutral-tweets',
+    'negative': 'negative-tweets'
+}
+s3_client = boto3.client('s3')
+
+# RDS Database Configuration
+DB_HOST = 'twitterdatabase.clq2628wi96r.us-east-1.rds.amazonaws.com'
+DB_USER = 'admin'
+DB_PASSWORD = 'superawesometeam'
+DB_NAME = 'twitterdatabase'
+def get_tweets_from_s3(sentiment):
+    """Fetch tweet texts from S3 based on sentiment."""
+    tweets = []
+    bucket_name = S3_BUCKETS[sentiment]
+    response = s3_client.list_objects_v2(Bucket=bucket_name)
+    if 'Contents' in response:
+        for obj in response['Contents']:
+            tweet_key = obj['Key']
+            tweet_content = s3_client.get_object(Bucket=bucket_name, Key=tweet_key)['Body'].read().decode('utf-8')
+            tweets.append(tweet_content)
+    return tweets
+
+def get_metadata_from_rds():
+    """Fetch tweet metadata from the RDS database."""
+    connection = pymysql.connect(host=DB_HOST, user=DB_USER, password=DB_PASSWORD, database=DB_NAME)
+    query = "SELECT tweet_id, user, date FROM tweets;"
+    df = pd.read_sql(query, connection)
+    connection.close()
+    return df
+
+def main():
+    st.title("Sentiment-Based Tweet Viewer")
+
+    # Sentiment Selection
+    sentiment = st.selectbox(
+        "Select the type of tweets to display:",
+        ("positive", "neutral", "negative")
+    )
+
+    # Fetch tweets from S3
+    st.write(f"Fetching {sentiment} tweets...")
+    tweet_texts = get_tweets_from_s3(sentiment)
+
+    # Fetch metadata from RDS
+    tweet_metadata = get_metadata_from_rds()
+
+    # Merge metadata with tweet texts (assuming tweet IDs are part of the S3 keys)
+    data = []
+    for tweet_text in tweet_texts:
+        tweet_id = tweet_text.split('\n')[0]  # Assuming the first line of the text is the tweet ID
+        metadata = tweet_metadata[tweet_metadata['tweet_id'] == tweet_id]
+        if not metadata.empty:
+            user = metadata['user'].values[0]
+            date = metadata['date'].values[0]
+            data.append({
+                'user': user,
+                'date': date,
+                'text': tweet_text
+            })
+
+    # Display Tweets
+    if data:
+        for tweet in data:
+            st.markdown(f"### @{tweet['user']} - {tweet['date']}")
+            st.write(tweet['text'])
+            st.write("---")
+    else:
+        st.write("No tweets found for the selected sentiment.")
 
 if __name__ == "__main__":
-    option = st.selectbox(
-        "Choose what type of Tweets you want to see",
-        ("Positive", "Negative", "Neutral", "All"),
-        key='option'
-    )
+    main()
