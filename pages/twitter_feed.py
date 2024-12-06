@@ -3,26 +3,30 @@ import boto3
 import pymysql
 import pandas as pd
 import os
+
 # AWS S3 Configuration
 S3_BUCKETS = {
     'positive': 'positive-tweets',
     'neutral': 'neutral-tweets',
     'negative': 'negative-tweets'
 }
+
+# AWS session setup
 session = boto3.Session(
     aws_access_key_id=os.getenv('AWS_ACCESS_KEY_ID'),
     aws_secret_access_key=os.getenv('AWS_SECRET_ACCESS_KEY'),
     aws_session_token=os.getenv('AWS_SESSION_TOKEN')
 )
 
-# Now you can create clients or resources
-s3 = session.client('s3')
+# Create S3 client using the session
+s3_client = session.client('s3')
 
 # RDS Database Configuration
 DB_HOST = 'twitterdatabase.clq2628wi96r.us-east-1.rds.amazonaws.com'
 DB_USER = 'admin'
 DB_PASSWORD = 'superawesometeam'
 DB_NAME = 'twitterdatabase'
+
 def get_tweets_from_s3(sentiment):
     """Fetch tweet texts from S3 based on sentiment."""
     tweets = []
