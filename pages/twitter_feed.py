@@ -42,7 +42,7 @@ def get_tweets_from_s3(sentiment):
 def get_metadata_from_rds():
     """Fetch tweet metadata from the RDS database."""
     connection = pymysql.connect(host=DB_HOST, user=DB_USER, password=DB_PASSWORD, database=DB_NAME)
-    query = "SELECT tweet_id, user, date FROM tweets;"
+    query = "SELECT ID, USER, Date FROM tweets_metadata;"
     df = pd.read_sql(query, connection)
     connection.close()
     return df
