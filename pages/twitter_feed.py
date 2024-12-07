@@ -32,7 +32,6 @@ def get_tweets_from_s3(sentiment):
     """Fetch tweet texts from S3 based on sentiment."""
     tweets = []
     bucket_name = S3_BUCKETS[sentiment]
-    st.write(f"Fetching tweets from bucket: {bucket_name}")
 
     # List objects in the bucket
     response = s3_client.list_objects_v2(Bucket=bucket_name)
@@ -45,7 +44,6 @@ def get_tweets_from_s3(sentiment):
     # Iterate through all objects in the bucket and fetch their text content
     for obj in response['Contents']:
         tweet_key = obj['Key']
-        st.write(f"Found tweet with key: {tweet_key}")  # Debugging line to see keys
 
         # Fetch the object from S3 using its key
         file_response = s3_client.get_object(Bucket=bucket_name, Key=tweet_key)
