@@ -63,11 +63,11 @@ def main():
     # Fetch metadata from RDS
     tweet_metadata = get_metadata_from_rds()
 
-    # Merge metadata with tweet texts (assuming tweet IDs are part of the S3 keys)
+    # Merge metadata with tweet texts
     data = []
     for tweet_text in tweet_texts:
-        tweet_id = tweet_text.split('\n')[0]  # Assuming the first line of the text is the tweet ID
-        metadata = tweet_metadata[tweet_metadata['tweet_id'] == tweet_id]
+        tweet_id = tweet_text.split('\n')[0]
+        metadata = tweet_metadata[tweet_metadata['ID'] == tweet_id]
         if not metadata.empty:
             user = metadata['user'].values[0]
             date = metadata['date'].values[0]
@@ -80,7 +80,7 @@ def main():
     # Display Tweets
     if data:
         for tweet in data:
-            st.markdown(f"### @{tweet['user']} - {tweet['date']}")
+            st.markdown(f"### @{tweet['User']} - {tweet['Date']}")
             st.write(tweet['text'])
             st.write("---")
     else:
