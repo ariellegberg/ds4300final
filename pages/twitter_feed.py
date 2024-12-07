@@ -3,7 +3,7 @@ import boto3
 import pymysql
 import pandas as pd
 import os
-
+import io
 # AWS S3 Configuration
 S3_BUCKETS = {
     'positive': 'positive-tweets',
@@ -31,13 +31,14 @@ def get_tweets_from_s3(sentiment):
     """Fetch tweet texts from S3 based on sentiment."""
     tweets = []
     bucket_name = S3_BUCKETS[sentiment]
-    response = s3_client.list_objects_v2(Bucket=bucket_name)
-    if 'Contents' in response:
-        for obj in response['Contents']:
-            tweet_key = obj['Key']
-            tweet_content = s3_client.get_object(Bucket=bucket_name, Key=tweet_key)['Body'].read().decode('utf-8')
-            tweets.append(tweet_content)
-    return tweets
+    st.write('bucket name', bucket_name)
+    response = s3_client.get_object(Bucket=bucket_name)
+    return pd.read_csv(io.BytesIO(response['Body'].read()))    # if 'Contents' in response:
+    #     for obj in response['Contents']:
+    #         tweet_key = obj['Key']
+    #         tweet_content = s3_client.get_object(Bucket=bucket_name, Key=tweet_key)['Body'].read().decode('utf-8')
+    #         tweets.append(tweet_content)
+    # return tweets
 
 def get_metadata_from_rds():
     """Fetch tweet metadata from the RDS database."""
