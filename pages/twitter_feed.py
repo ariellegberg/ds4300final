@@ -78,31 +78,14 @@ def main():
     st.write(f"Fetching {sentiment} tweets...")
     tweet_texts = get_tweets_from_s3(sentiment)
 
-    # Fetch metadata from RDS
-    tweet_metadata = get_metadata_from_rds()
-
-    # Merge metadata with tweet texts
-    data = []
-    for tweet_text in tweet_texts:
-        tweet_id = tweet_text.split('\n')[0]
-        metadata = tweet_metadata[tweet_metadata['ID'] == tweet_id]
-        if not metadata.empty:
-            user = metadata['user'].values[0]
-            date = metadata['date'].values[0]
-            data.append({
-                'user': user,
-                'date': date,
-                'text': tweet_text
-            })
-
     # Display Tweets
-    if data:
-        for tweet in data:
-            st.markdown(f"### @{tweet['User']} - {tweet['Date']}")
-            st.write(tweet['text'])
+    if tweet_texts:
+        for tweet_text in tweet_texts:
+            st.write(tweet_text)
             st.write("---")
     else:
         st.write("No tweets found for the selected sentiment.")
 
 if __name__ == "__main__":
     main()
+
