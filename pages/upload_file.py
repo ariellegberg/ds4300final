@@ -82,7 +82,7 @@ def main():
                 st.success(f"Your tweet has been posted successfully!")
                 st.write(f"View your tweet on S3: [Tweet File]({s3_url})")
             except Exception:
-                st.error("Failed to upload tweet to S3. Please try again.")
+                # st.error("Failed to upload tweet to S3. Please try again.")
         else:
             # Show error message if the tweet input is empty
             st.error("Please type something before posting.")
