@@ -1,10 +1,17 @@
 import streamlit as st
 from streamlit.logger import get_logger
-from pathlib import Path
-import os
+import boto3
+import time
 
 # Set up logging for the app
 LOGGER = get_logger(__name__)
+
+# AWS S3 Configuration
+AWS_REGION = "us-east-1"  # Replace with your AWS region
+S3_BUCKET = "tweet-uploads"  # Your S3 bucket name
+
+# Initialize S3 client
+s3 = boto3.client('s3', region_name=AWS_REGION)
 
 def set_page_style():
     """Function to set custom styles for the Streamlit page."""
@@ -39,6 +46,16 @@ def set_page_style():
         """, unsafe_allow_html=True
     )
 
+def upload_to_s3(content, bucket_name, file_key):
+    """Uploads text content to S3 as a file."""
+    try:
+        s3.put_object(Bucket=bucket_name, Key=file_key, Body=content)
+        LOGGER.info(f"Uploaded {file_key} to {bucket_name}")
+        return f"https://{bucket_name}.s3.{AWS_REGION}.amazonaws.com/{file_key}"
+    except Exception as e:
+        LOGGER.error(f"Failed to upload {file_key}: {e}")
+        raise e
+
 def main():
     """Main function to render Streamlit app."""
     # Set custom page styles
@@ -56,11 +73,16 @@ def main():
 
     if submit:
         if tweet:
-            # You can add your tweet handling logic here
-            st.success(f"Your tweet: '{tweet}' has been posted!")
-            # For now, let's simulate the transition to another page
-            st.write("Redirecting to Twitter Feed...")
-            st.switch_page('pages/twitter_feed.py')
+            # Generate a unique file key for the tweet
+            file_key = f"tweet_{int(time.time())}.txt"
+
+            try:
+                # Upload the tweet to S3
+                s3_url = upload_to_s3(tweet, S3_BUCKET, file_key)
+                st.success(f"Your tweet has been posted successfully!")
+                st.write(f"View your tweet on S3: [Tweet File]({s3_url})")
+            except Exception:
+                st.error("Failed to upload tweet to S3. Please try again.")
         else:
             # Show error message if the tweet input is empty
             st.error("Please type something before posting.")
