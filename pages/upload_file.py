@@ -81,7 +81,7 @@ def main():
                 s3_url = upload_to_s3(tweet, S3_BUCKET, file_key)
                 st.success(f"Your tweet has been posted successfully!")
                 st.write(f"View your tweet on S3: [Tweet File]({s3_url})")
-            except Exception:
+            # except Exception:
                 # st.error("Failed to upload tweet to S3. Please try again.")
         else:
             # Show error message if the tweet input is empty
